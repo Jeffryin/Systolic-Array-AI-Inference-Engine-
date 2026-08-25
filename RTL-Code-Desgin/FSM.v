@@ -10,7 +10,7 @@ module FSM();
 	localparam DONE = 4'b1000;
 
 	input clk, reset, start, DMA_done;
-	output clear_acc, valid_in, output_enable, DMA_start;
+	output reg clear_acc, valid_in, output_enable, DMA_start;
 	reg [3:0] current_state, next_state;
 	reg [5:0] cycle_counter;
 
@@ -24,33 +24,28 @@ module FSM();
 	always @(*) begin
 		case(current_state)
 			LOAD_A: begin
-				DMA_start <= 1; 
-				if(DMA_done == 1) next_state <= LOAD_B;
-				else next_state <= LOAD_A;
+				if(DMA_done == 1) next_state = LOAD_B;
+				else next_state = LOAD_A;
 			end
 			LOAD_B: begin
-				DMA_start <= 1;
-				if(DMA_done == 1) next_state <= CLEAR_ARRAY;
-				else next_state <= LOAD_B;
+				if(DMA_done == 1) next_state = CLEAR_ARRAY;
+				else next_state = LOAD_B;
 			end
 			CLEAR_ARRAY: begin
-				clear_acc <= 1;
-				next_state <= COMPUTE;
+				next_state = COMPUTE;
 			end
 			COMPUTE: begin
-				valid_in <= 1;
-				if(cycle_counter == 45) next_state <= DRAIN;
+				if(cycle_counter == 45) next_state = DRAIN;
 			end
 			DRAIN: begin
-				valid_in <= 0;
-				if(cycle_counter == 15) next_state <= STORE_C;
+				if(cycle_counter == 15) next_state = STORE_C;
 			end
 			STORE_C: begin
-				if(DMA_done) next_state <= CHECK_NEXT_TILE;
-				else next_state <= STORE_C;
+				if(DMA_done) next_state = CHECK_NEXT_TILE;
+				else next_state = STORE_C;
 			end 
-			CHECK_NEXT_TILE: next_state <= DONE;
-			DONE: next_state <= IDLE;
+			CHECK_NEXT_TILE: next_state = DONE;
+			DONE: next_state = IDLE;
 			default : next_state = IDLE;
 		endcase
 	end
@@ -62,5 +57,8 @@ module FSM();
 		DMA_start <= 0;
 		if(current_state != next_state) cycle_counter <= 0;
 		if(current_state == next_state) cycle_counter = cycle_counter + 1;
+		if(current_state == CLEAR_ARRAY) clear_acc <= 1;
+		if(current_state == DRAIN) output_enable <= 1;
+		if(current_state == COMPUTE) valid_in <= 1;
 	end
 endmodule
