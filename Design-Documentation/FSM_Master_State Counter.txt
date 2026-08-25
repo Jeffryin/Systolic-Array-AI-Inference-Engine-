@@ -1,0 +1,45 @@
+Finite State Machine 
+
+9 states of the Design 
+- IDLE
+-LOAD_A
+loads DMA_START high - > checks if DMA_DONE is high, high -> next_state = LOAD_B. 
+DMA_DONE = 0 next_state remains as LOAD_A
+
+-LOAD_B
+loads DMA_START high - > checks if DMA_DONE is high, high -> next_state = CLEAR_ARRAY 
+DMA_DONE = 0 next_state remains as LOAD_B
+
+-CLEAR_ARRAY
+
+-COMPUTE
+VALID_IN = 1
+check whether or not if cycle 1 happens when counter is = 0 or 1. If it's at zero a full cycle is when counter is 45. If cycle_counter == 45 move onto DRAIN
+
+-DRAIN
+VALID_IN = 0
+the 16x16 systolic array will take exactly 16 cycles to drain the 32 bit values.
+cycle_counter == 15 -> next_state = STORE_C
+
+-STORE_C
+-CHECK_NEXT_TILE
+-DONE
+For this design, I will be utilizing a master state counter. This will be divided into 3 sections: State Memory (Sequential), Next-State Logic (Combinational), Master counter and outputs.
+
+State Memory
+-Triggered by the posedge of the clock
+-Blindly copies the value of next_state to current_state
+-When reset is triggered or active low/high (set by the design) set the value of current_state back to `IDLE`
+
+Next State Logic
+- Each state will be labeled by either 4 bit binary number such as 4b'0000 - 4'bXXXX or 4'd0. 
+	- will be evaluated by each case
+		- case(current_state)
+- For Compute state, will need to see if the counter is equal to 46 clock cycles then move onto DRAIN. 
+	- if it didn't reach 46 assign next_state to COMPUTE as it will still be computing
+
+Master Counter and Outputs
+- if current_state doesn't equal next_state = FSM is moving -> force the master counter to 0
+	- Should aim to reset the master counter during a state transition to ensure it starts at exactly 0 on the precise clock cycle the FSM enters compute or drain phase. 
+- if they match, increment the master counter by 1.
+- based on what current_state is drive the global control signals such as valid_in or output_enable
