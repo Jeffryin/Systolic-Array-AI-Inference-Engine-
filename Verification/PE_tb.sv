@@ -91,6 +91,58 @@ module PE_tb();
 		#1; 
 		$display("%0t C_out = %d, expected = 0",$time, C_out);
 
+		//min * min -128 * -128
+		@(negedge clk);
+		A_in = -128; B_in = -128; clear_acc = 0; valid_in = 1; output_enable = 0;
+		@(posedge clk);
+		#1;
+		$display("%0t C_out = %d, expected = 16,384", $time, C_out);
+
+		//min * max -128 * 127
+		@(negedge clk);
+		A_in = -128; B_in = 127; clear_acc = 0; valid_in = 1; output_enable = 0;
+		@(posedge clk);
+		#1; 
+		//16,384 + -(16,256) = 128 ... -16,256 is -128 * 127
+		$display("%0t C_out = %d, expected = 128", $time, C_out);
+
+		//max * max 127 * 127
+		@(negedge clk);
+		A_in = 127; B_in = 127; clear_acc = 0; valid_in = 1; output_enable = 0;
+		@(posedge clk);
+		#1; 
+		//127 * 127 = 16,129 + 128
+		$display("%0t C_out = %d, expected = 16,257",$time, C_out);
+
+		//0 * negative 0 * -(x)
+		@(negedge clk);
+		A_in = 0; B_in = -31; clear_acc = 0; valid_in = 1; output_enable = 0;
+		@(posedge clk);
+		#1; 
+		$display("%0t C_out	= %d, expected = 16,257",$time, C_out);
+
+		//0 * positive 0 * x
+		@(negedge clk);
+		A_in = 0; B_in = 27; clear_acc = 0; valid_in = 1; output_enable = 0;
+		@(posedge clk);
+		#1; 
+		$display("%0t C_out = %d, expected = 16,257", $time, C_out);
+
+		//negative * negative -(x) * -(x)
+		@(negedge clk);
+		A_in = -69; B_in = -13; clear_acc = 0; valid_in = 1; output_enable = 0;
+		@(posedge clk);
+		#1; 
+		//16,257 + 897
+		$display("%0t C_out = %d, expected = 17,154", $time, C_out);
+
+		//negative * positive -(x) * x
+		@(negedge clk);
+		A_in = -21; B_in = 7; clear_acc = 0; valid_in = 1; output_enable = 0; 
+		@(posedge clk);
+		#1; 
+		//-147 + 17,154 = 
+		$display("%0t C_out = %d, expected = 17,007",$time, C_out);
 	end
 endmodule
 
