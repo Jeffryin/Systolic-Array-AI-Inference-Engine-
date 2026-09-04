@@ -10,7 +10,7 @@ module systolic_PE(clk, A_in, B_in, A_out, B_out, C_in, C_out, clear_acc, valid_
 	output signed [ACC_W-1:0] C_out;
 	output valid_out;
 	reg signed [DATA_W-1:0] A_reg, B_reg;
-	reg valid_reg;
+	reg valid_reg, clear_reg, output_reg;
 	reg signed [ACC_W-1:0] acc_reg;
 	wire signed [(DATA_W*2)-1:0] product;
 
@@ -19,6 +19,9 @@ module systolic_PE(clk, A_in, B_in, A_out, B_out, C_in, C_out, clear_acc, valid_
 	always @ (posedge clk) begin
 		A_reg <= A_in;
 		B_reg <= B_in;
+		//added clear_acc and output_enable to pass through 
+		clear_reg <= clear_acc;
+		output_reg <= output_enable;
 		valid_reg <= valid_in;
 		if(clear_acc == 1) acc_reg <= 0;
 		else if (valid_in == 1) begin
