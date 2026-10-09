@@ -1,5 +1,5 @@
 # Systolic-Array-AI-Inference-Engine-
-This project will help me solidify my understanding of a systolic array AI engine. It will utilize 256 Processing Elements to do the core computation of matrix multiplication. This design will also utilize DMA engines, FSM controller and SRAM streamers to help finalize the design. 
+This project will help me solidify my understanding of a matrix multiplication hardware accelerator using an INT8 systolic array architecture and see how data gets propagated and pipelined and the hardware architecture design choices. It will utilize 256 Processing Elements to do the core computation of MAC operations which will send operands locally rather than fetching it from main memory. This design will also utilize DMA engines, FSM controller and SRAM streamers to help finalize the design.
 
 # Design Specifications
 
