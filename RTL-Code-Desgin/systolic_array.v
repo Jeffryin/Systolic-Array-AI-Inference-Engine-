@@ -1,16 +1,16 @@
-module systolic_array();
+module systolic_array(clk, clear_acc_global, valid_in_global, output_enable_global, A_in, B_in, C_out);
 	parameter DATA_W = 8;
 	parameter ACC_W = 32;
 	parameter ARRAY_SIZE = 16;
 
 	input clk;
 	input clear_acc_global, valid_in_global, output_enable_global;
-	input [16*DATA_W-1:0] A_in, B_in;
+	input signed [16*DATA_W-1:0] A_in, B_in;
 	output [16*ACC_W-1:0] C_out;
 
-	wire [DATA_W-1:0] A_net[0:ARRAY_SIZE-1][0:ARRAY_SIZE];
-	wire [DATA_W-1:0] B_net[0:ARRAY_SIZE][0:ARRAY_SIZE-1];
-	wire [ACC_W-1:0] C_net[0:ARRAY_SIZE][0:ARRAY_SIZE-1];
+	wire signed [DATA_W-1:0] A_net[0:ARRAY_SIZE-1][0:ARRAY_SIZE];
+	wire signed [DATA_W-1:0] B_net[0:ARRAY_SIZE][0:ARRAY_SIZE-1];
+	wire signed [ACC_W-1:0] C_net[0:ARRAY_SIZE][0:ARRAY_SIZE-1];
 
 	wire valid_net[0:ARRAY_SIZE-1][0:ARRAY_SIZE];
 	wire clear_net[0:ARRAY_SIZE-1][0:ARRAY_SIZE];
@@ -37,13 +37,13 @@ module systolic_array();
 				//register array and loop integer
 				reg [DATA_W-1:0] delay_A[0:i-1];
 				reg [DATA_W-1:0] delay_B[0:i-1];
-				reg [2:0] delay_ctrl[0:i-1];
+				reg [1:0] delay_ctrl[0:i-1]; //need to decrease this delay register to 2 bits 
 				integer n;
 				//clocked shift logic
 				always @(posedge clk) begin
 					delay_A[0] <= A_slice;
 					delay_B[0] <= B_slice;
-					delay_ctrl[0] <= {valid_in_global, clear_acc_global, output_enable_global};
+					delay_ctrl[0] <= {valid_in_global, clear_acc_global}; //removed output_enable_global
 					for(n=1; n < i; n = n +1)begin
 						delay_A[n] <= delay_A[n-1];
 						delay_B[n] <= delay_B[n-1];
@@ -53,11 +53,14 @@ module systolic_array();
 				//continuous assignment to the output net here 
 				assign A_net[i][0] = delay_A[i-1];
 				assign B_net[0][i] = delay_B[i-1];
-				assign clear_net[i][0] = delay_ctrl[i-1][1];
-				assign valid_net[i][0] = delay_ctrl[i-1][2];
-				assign drain_net[i][0] = delay_ctrl[i-1][0];
+				assign clear_net[i][0] = delay_ctrl[i-1][0];
+				assign valid_net[i][0] = delay_ctrl[i-1][1];
+				assign drain_net[i][0] = output_enable_global; //assign the drain net directly to the global input for every row
+			end
 		end
 	endgenerate
+
+	genvar j;
 
 	//instantiate the 16x16 PE array
 	generate
@@ -65,8 +68,6 @@ module systolic_array();
 			assign C_net[0][j] = 32'd0; //top row has no C_in above it. 
 		end
 	endgenerate
-
-	genvar j;
 
 	generate 
 		for(i = 0; i < ARRAY_SIZE; i = i+1)begin : row_loop
@@ -92,5 +93,6 @@ module systolic_array();
 		for(j = 0; j < ARRAY_SIZE; j = j+1) begin
 			assign C_out[j * ACC_W +: ACC_W] = C_net[ARRAY_SIZE][j];
 		end
+		//C_out should now be one big 512 bit number
 	endgenerate
 endmodule

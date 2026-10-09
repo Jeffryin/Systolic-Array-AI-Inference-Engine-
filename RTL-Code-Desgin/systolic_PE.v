@@ -1,4 +1,4 @@
-module systolic_PE(clk, A_in, B_in, A_out, B_out, C_in, C_out, clear_acc, valid_in, valid_out, output_enable);
+module systolic_PE(clk, A_in, B_in, A_out, B_out, C_in, C_out, clear_acc, clear_out, valid_in, valid_out, output_enable, output_out);
 	parameter DATA_W = 8;
 	parameter ACC_W = 32;
 
@@ -8,7 +8,7 @@ module systolic_PE(clk, A_in, B_in, A_out, B_out, C_in, C_out, clear_acc, valid_
 	input signed [ACC_W-1:0] C_in;
 	output signed [DATA_W -1:0] A_out, B_out;
 	output signed [ACC_W-1:0] C_out;
-	output valid_out;
+	output valid_out,clear_out, output_out;
 	reg signed [DATA_W-1:0] A_reg, B_reg;
 	reg valid_reg, clear_reg, output_reg;
 	reg signed [ACC_W-1:0] acc_reg;
@@ -33,5 +33,7 @@ module systolic_PE(clk, A_in, B_in, A_out, B_out, C_in, C_out, clear_acc, valid_
 	assign A_out = A_reg;
 	assign B_out = B_reg;
 	assign valid_out = valid_reg;
+	assign clear_out = clear_reg;
+	assign output_out = output_reg; 
 	assign C_out = acc_reg;
 endmodule
