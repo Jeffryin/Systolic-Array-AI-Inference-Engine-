@@ -1,4 +1,4 @@
-module FSM();
+module FSM(clk, reset, start, DMA_done, clear_acc, valid_in, output_enable, DMA_start);
 	localparam IDLE = 4'b0000;
 	localparam LOAD_A = 4'b0001;
 	localparam LOAD_B = 4'b0010;
@@ -23,6 +23,10 @@ module FSM();
 	//combinational Next state logic
 	always @(*) begin
 		case(current_state)
+			IDLE: begin
+				if(start) next_state = LOAD_A;
+				else next_state = IDLE;
+			end
 			LOAD_A: begin
 				if(DMA_done == 1) next_state = LOAD_B;
 				else next_state = LOAD_A;
@@ -36,9 +40,11 @@ module FSM();
 			end
 			COMPUTE: begin
 				if(cycle_counter == 45) next_state = DRAIN;
+				else next_state = COMPUTE;
 			end
 			DRAIN: begin
 				if(cycle_counter == 15) next_state = STORE_C;
+				else next_state = DRAIN;
 			end
 			STORE_C: begin
 				if(DMA_done) next_state = CHECK_NEXT_TILE;
@@ -54,11 +60,16 @@ module FSM();
 	always @(posedge clk) begin
 		valid_in <= 0;
 		clear_acc <= 0;
+		output_enable <= 0;
 		DMA_start <= 0;
 		if(current_state != next_state) cycle_counter <= 0;
-		if(current_state == next_state) cycle_counter = cycle_counter + 1;
+		if(current_state == next_state) cycle_counter <= cycle_counter + 1;
+		//if current state is either LOAD_A or LOAD_B and the cycle counter is 0 start the DMA 
+		if(current_state == LOAD_A && cycle_counter == 0) DMA_start <= 1;  
+		if(current_state == LOAD_B && cycle_counter == 0) DMA_start <= 1;
+		if(current_state == STORE_C && cycle_counter == 0) DMA_start <= 1;
 		if(current_state == CLEAR_ARRAY) clear_acc <= 1;
-		if(current_state == DRAIN) output_enable <= 1;
 		if(current_state == COMPUTE) valid_in <= 1;
+		if(current_state == DRAIN) output_enable <= 1;
 	end
 endmodule
