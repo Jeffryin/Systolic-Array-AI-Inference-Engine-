@@ -24,7 +24,7 @@ module FSM_tb();
 		#1; 
 		reset = 0;
 
-		//trigger FSM
+		//trigger FSA
 		start = 1;
 		@(posedge clk);
 		start = 0;
